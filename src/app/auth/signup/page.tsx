@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Phone, CheckCircle } from 'lucide-react';
 import { REGIONS, UserRole } from '@/types';
 import { createClient } from '@/lib/supabase/client';
 
@@ -22,6 +22,7 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -46,7 +47,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -64,14 +65,46 @@ export default function SignupPage() {
         return;
       }
 
-      router.push('/');
-      router.refresh();
+      // Check if email confirmation is required
+      if (data?.user?.identities?.length === 0) {
+        setError('An account with this email already exists');
+        return;
+      }
+
+      // If session exists, user is logged in (no email confirmation needed)
+      if (data?.session) {
+        router.push('/');
+        router.refresh();
+      } else {
+        // Email confirmation required
+        setSuccess(true);
+      }
     } catch (err) {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="card">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-foreground mb-2">Check your email</h1>
+            <p className="text-muted mb-6">
+              We sent a confirmation link to <strong>{formData.email}</strong>.
+              Click the link to activate your account.
+            </p>
+            <Link href="/auth/login" className="btn-primary">
+              Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
@@ -103,7 +136,7 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="John Smith"
                   required
-                  className="input pl-10"
+                  className="input-icon"
                 />
               </div>
             </div>
@@ -122,7 +155,7 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="you@example.com"
                   required
-                  className="input pl-10"
+                  className="input-icon"
                 />
               </div>
             </div>
@@ -140,7 +173,7 @@ export default function SignupPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="403-555-0123"
-                  className="input pl-10"
+                  className="input-icon"
                 />
               </div>
             </div>
@@ -200,7 +233,7 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="At least 8 characters"
                   required
-                  className="input pl-10 pr-10"
+                  className="input-icon pr-11"
                 />
                 <button
                   type="button"
@@ -230,7 +263,7 @@ export default function SignupPage() {
                   onChange={handleChange}
                   placeholder="Confirm your password"
                   required
-                  className="input pl-10"
+                  className="input-icon"
                 />
               </div>
             </div>
