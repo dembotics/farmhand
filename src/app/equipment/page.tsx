@@ -75,7 +75,7 @@ export default function EquipmentPage() {
       if (error) {
         console.error('Error fetching equipment:', error);
       } else {
-        setEquipment(data || []);
+        setEquipment((data as Equipment[]) || []);
       }
       setLoading(false);
     };

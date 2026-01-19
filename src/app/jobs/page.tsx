@@ -62,7 +62,7 @@ export default function JobsPage() {
       if (error) {
         console.error('Error fetching jobs:', error);
       } else {
-        setJobs(data || []);
+        setJobs((data as Job[]) || []);
       }
       setLoading(false);
     };

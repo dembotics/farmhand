@@ -67,7 +67,7 @@ export default function LandPage() {
       if (error) {
         console.error('Error fetching land:', error);
       } else {
-        setLand(data || []);
+        setLand((data as Land[]) || []);
       }
       setLoading(false);
     };

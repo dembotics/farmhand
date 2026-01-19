@@ -48,7 +48,7 @@ export default function WorkersPage() {
       if (error) {
         console.error('Error fetching workers:', error);
       } else {
-        setWorkers(data || []);
+        setWorkers((data as Worker[]) || []);
       }
       setLoading(false);
     };
