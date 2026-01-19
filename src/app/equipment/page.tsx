@@ -116,7 +116,7 @@ export default function EquipmentPage() {
               placeholder="Search equipment..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input pl-10"
+              className="input-icon"
             />
           </div>
           <div className="md:w-48">

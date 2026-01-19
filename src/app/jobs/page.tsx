@@ -104,7 +104,7 @@ export default function JobsPage() {
               placeholder="Search jobs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input pl-10"
+              className="input-icon"
             />
           </div>
 
