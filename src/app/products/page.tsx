@@ -80,7 +80,7 @@ export default function ProductsPage() {
       if (error) {
         console.error('Error fetching products:', error);
       } else {
-        setProducts((data as Product[]) || []);
+        setProducts((data as unknown as Product[]) || []);
       }
       setLoading(false);
     };
