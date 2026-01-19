@@ -79,8 +79,13 @@ export default function JobDetailPage() {
 
       if (error) {
         console.error('Error fetching job:', error);
-      } else {
-        setJob(data);
+      } else if (data) {
+        // Handle profiles being returned as array
+        const jobData = {
+          ...data,
+          profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
+        };
+        setJob(jobData);
       }
       setLoading(false);
     };

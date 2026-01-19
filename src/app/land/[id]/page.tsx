@@ -64,8 +64,12 @@ export default function LandDetailPage() {
 
       if (error) {
         console.error('Error fetching land:', error);
-      } else {
-        setLand(data);
+      } else if (data) {
+        const landData = {
+          ...data,
+          profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
+        };
+        setLand(landData);
       }
       setLoading(false);
     };

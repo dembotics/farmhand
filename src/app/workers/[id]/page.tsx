@@ -59,8 +59,12 @@ export default function WorkerDetailPage() {
 
       if (error) {
         console.error('Error fetching worker:', error);
-      } else {
-        setWorker(data);
+      } else if (data) {
+        const workerData = {
+          ...data,
+          profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
+        };
+        setWorker(workerData);
       }
       setLoading(false);
     };

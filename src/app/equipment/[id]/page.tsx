@@ -68,8 +68,12 @@ export default function EquipmentDetailPage() {
 
       if (error) {
         console.error('Error fetching equipment:', error);
-      } else {
-        setEquipment(data);
+      } else if (data) {
+        const equipmentData = {
+          ...data,
+          profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
+        };
+        setEquipment(equipmentData);
       }
       setLoading(false);
     };

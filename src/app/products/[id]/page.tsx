@@ -76,8 +76,12 @@ export default function ProductDetailPage() {
 
       if (error) {
         console.error('Error fetching product:', error);
-      } else {
-        setProduct(data);
+      } else if (data) {
+        const productData = {
+          ...data,
+          profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
+        };
+        setProduct(productData);
       }
       setLoading(false);
     };
