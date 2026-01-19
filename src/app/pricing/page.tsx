@@ -1,5 +1,10 @@
+'use client';
+
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { Check, X } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Check, X, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const features = [
   { name: 'Browse all listings', free: true, paid: true },
@@ -16,7 +21,52 @@ const features = [
   { name: 'Priority in search results', free: false, paid: true },
 ];
 
+function CanceledBanner() {
+  const searchParams = useSearchParams();
+  const canceled = searchParams.get('canceled');
+
+  if (!canceled) return null;
+
+  return (
+    <div className="max-w-md mx-auto mb-8 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-center">
+      Checkout was canceled. You can try again when ready.
+    </div>
+  );
+}
+
 export default function PricingPage() {
+  const { user, profile, loading } = useAuth();
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!user) return;
+
+    setSubscribing(true);
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+      });
+
+      const { url, error } = await response.json();
+
+      if (error) {
+        alert(error);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (err) {
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setSubscribing(false);
+    }
+  };
+
+  const isSubscribed = profile?.is_subscribed;
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       {/* Header */}
@@ -28,6 +78,10 @@ export default function PricingPage() {
           Free to browse and apply. Pay only when you need to post listings.
         </p>
       </div>
+
+      <Suspense fallback={null}>
+        <CanceledBanner />
+      </Suspense>
 
       {/* Pricing Cards */}
       <div className="grid md:grid-cols-2 gap-8 mb-16">
@@ -55,12 +109,18 @@ export default function PricingPage() {
               </li>
             ))}
           </ul>
-          <Link
-            href="/auth/signup"
-            className="btn-outline w-full text-center block"
-          >
-            Create Free Account
-          </Link>
+          {!user ? (
+            <Link
+              href="/auth/signup"
+              className="btn-outline w-full text-center block"
+            >
+              Create Free Account
+            </Link>
+          ) : (
+            <span className="btn-outline w-full text-center block opacity-50 cursor-default">
+              Current Plan
+            </span>
+          )}
         </div>
 
         {/* Paid Tier */}
@@ -79,7 +139,7 @@ export default function PricingPage() {
             <span className="text-muted">/month</span>
           </div>
           <p className="text-sm text-muted mb-6">
-            or $120/year (save $60)
+            Cancel anytime
           </p>
           <ul className="space-y-3 mb-8">
             {features.map((feature) => (
@@ -89,12 +149,41 @@ export default function PricingPage() {
               </li>
             ))}
           </ul>
-          <Link
-            href="/auth/signup"
-            className="btn-primary w-full text-center block"
-          >
-            Start Posting
-          </Link>
+          {loading ? (
+            <button disabled className="btn-primary w-full flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading...
+            </button>
+          ) : !user ? (
+            <Link
+              href="/auth/signup"
+              className="btn-primary w-full text-center block"
+            >
+              Start Posting
+            </Link>
+          ) : isSubscribed ? (
+            <Link
+              href="/account/billing"
+              className="btn-primary w-full text-center block"
+            >
+              Manage Subscription
+            </Link>
+          ) : (
+            <button
+              onClick={handleSubscribe}
+              disabled={subscribing}
+              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {subscribing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Starting checkout...
+                </>
+              ) : (
+                'Subscribe Now'
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -162,9 +251,26 @@ export default function PricingPage() {
         <p className="text-muted mb-6">
           Join Alberta&apos;s agricultural community today.
         </p>
-        <Link href="/auth/signup" className="btn-primary inline-block">
-          Create Your Account
-        </Link>
+        {!user ? (
+          <Link href="/auth/signup" className="btn-primary inline-block">
+            Create Your Account
+          </Link>
+        ) : !isSubscribed ? (
+          <button
+            onClick={handleSubscribe}
+            disabled={subscribing}
+            className="btn-primary inline-flex items-center gap-2 disabled:opacity-50"
+          >
+            {subscribing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Starting checkout...
+              </>
+            ) : (
+              'Subscribe Now'
+            )}
+          </button>
+        ) : null}
       </div>
     </div>
   );
