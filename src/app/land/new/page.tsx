@@ -25,7 +25,7 @@ const rateTypes = [
 
 export default function NewLandPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -104,6 +104,20 @@ export default function NewLandPage() {
           <p className="text-muted mb-4">You must be logged in to list land.</p>
           <Link href="/auth/login" className="btn-primary">
             Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile?.is_subscribed) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="card text-center py-12">
+          <h2 className="text-xl font-semibold text-foreground mb-2">Subscription Required</h2>
+          <p className="text-muted mb-4">You need an active subscription to post listings.</p>
+          <Link href="/pricing" className="btn-primary">
+            View Pricing
           </Link>
         </div>
       </div>
