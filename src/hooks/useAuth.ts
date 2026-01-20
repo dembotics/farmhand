@@ -32,11 +32,15 @@ export function useAuth() {
 
         if (user) {
           // Fetch profile
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', user.id)
             .single();
+
+          if (error) {
+            console.error('Profile fetch error:', error);
+          }
           setProfile(profile);
         }
       } catch (error) {
@@ -54,11 +58,15 @@ export function useAuth() {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
+
+          if (error) {
+            console.error('Profile fetch error on auth change:', error);
+          }
           setProfile(profile);
         } else {
           setProfile(null);
