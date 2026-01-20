@@ -12,19 +12,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get or create Stripe customer
-    const { data: profile } = await supabase
+    // Get profile
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, email, full_name')
+      .select('stripe_customer_id, full_name')
       .eq('id', user.id)
       .single();
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+      return NextResponse.json({ error: 'Profile not found' }, { status: 400 });
+    }
 
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {
       // Create new Stripe customer
       const customer = await stripe.customers.create({
-        email: profile?.email || user.email,
+        email: user.email,
         name: profile?.full_name,
         metadata: {
           supabase_user_id: user.id,
@@ -33,13 +38,17 @@ export async function POST(request: NextRequest) {
       customerId = customer.id;
 
       // Save customer ID to profile
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Failed to save customer ID:', updateError);
+      }
     }
 
-    // Create checkout session
+    // Create checkout session - minimum 1 month, no proration
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -60,10 +69,11 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating checkout session:', error);
+    const message = error instanceof Error ? error.message : 'Failed to create checkout session';
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: message },
       { status: 500 }
     );
   }
